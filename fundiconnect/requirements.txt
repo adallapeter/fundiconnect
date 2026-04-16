@@ -1,4 +1,5 @@
 channels>=4.1,<5
+dj-database-url>=2.0,<3
 daphne>=4.2,<5
 django>=5.2,<5.3
 django-otp>=1.5

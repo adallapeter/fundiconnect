@@ -21,10 +21,10 @@ load_env_file(BASE_DIR / '.env')
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@d(6&x%m(69z#j77&7^r=z1d)k3613@%f!_s%g^!d1k6&!#v9b'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-@d(6&x%m(69z#j77&7^r=z1d)k3613@%f!_s%g^!d1k6&!#v9b')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ['1', 'true', 'yes']
 
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', '*').split(',') if host.strip()]
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
@@ -87,14 +87,19 @@ WSGI_APPLICATION = 'fundiconnect.wsgi.application'
 ASGI_APPLICATION = 'fundiconnect.asgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration - use DATABASE_URL if available, otherwise SQLite
+if os.environ.get('DATABASE_URL'):
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'), conn_max_age=600)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
