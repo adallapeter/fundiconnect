@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Direct Hire | FundiConnect{% endblock %}
+{% block page_title %}Direct hire workspace{% endblock %}
+{% block content %}
+<section class="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <h2 class="flex items-center gap-3 text-3xl font-extrabold text-slate-900"><i class="bi bi-send-check-fill text-sky-700"></i>{{ direct_hire.job_title }}</h2>
+        <p class="mt-3 text-sm leading-6 text-slate-600">{{ direct_hire.description }}</p>
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">Budget:</span> KES {{ direct_hire.budget }}</div>
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">Deadline:</span> {{ direct_hire.deadline }}</div>
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">Client:</span> {{ direct_hire.client.display_name }}</div>
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">Artisan:</span> {{ direct_hire.artisan.display_name }}</div>
+        </div>
+    </div>
+    <div class="space-y-6">
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+            <h3 class="flex items-center gap-3 text-2xl font-bold text-slate-900"><i class="bi bi-hourglass-split text-sky-700"></i>Current status</h3>
+            <div id="direct-hire-status" class="{{ direct_hire.status_badge_class }}">{{ direct_hire.get_status_display }}</div>
+            <form id="direct-hire-actions" method="post" class="mt-6 space-y-3">
+                {% csrf_token %}
+                {% if request.user == direct_hire.artisan and direct_hire.status == 'pending' %}
+                    <button name="action" value="accept" class="direct-hire-action w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700" data-loading-label="Accepting..."><i class="bi bi-check2-circle mr-2"></i>Accept hire</button>
+                    <button name="action" value="reject" class="direct-hire-action w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50" data-loading-label="Rejecting..."><i class="bi bi-x-circle mr-2"></i>Reject hire</button>
+                {% endif %}
+                {% if request.user == direct_hire.client and direct_hire.status == 'accepted' %}
+                    <button name="action" value="complete" class="direct-hire-action w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700" data-loading-label="Completing..."><i class="bi bi-flag mr-2"></i>Mark complete</button>
+                {% endif %}
+                {% if direct_hire.status != 'completed' and direct_hire.status != 'cancelled' %}
+                    <button name="action" value="cancel" class="direct-hire-action w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50" data-loading-label="Cancelling..."><i class="bi bi-slash-circle mr-2"></i>Cancel request</button>
+                {% endif %}
+            </form>
+        </div>
+        {% if conversation %}
+            <a href="{% url 'users:conversation_detail' conversation.id %}" class="block rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell hover:border-slate-300" data-loading-label="Opening chat...">
+                <h3 class="flex items-center gap-3 text-2xl font-bold text-slate-900"><i class="bi bi-chat-dots text-sky-700"></i>Open conversation</h3>
+                <p class="mt-2 text-sm text-slate-500">Continue the hire discussion in realtime chat.</p>
+            </a>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('direct-hire-actions');
+    const status = document.getElementById('direct-hire-status');
+    if (!form || !status) return;
+
+    form.querySelectorAll('.direct-hire-action').forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            window.setButtonLoading?.(button, true);
+            const formData = new FormData(form);
+            formData.set('action', button.value);
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': window.getCsrfToken?.() || ''}
+            })
+            .then((response) => response.json())
+            .then((payload) => {
+                status.textContent = payload.status;
+                const palette = {
+                    pending: 'bg-amber-100 text-amber-700',
+                    accepted: 'bg-emerald-100 text-emerald-700',
+                    rejected: 'bg-rose-100 text-rose-700',
+                    completed: 'bg-green-100 text-green-700',
+                    cancelled: 'bg-slate-100 text-slate-600',
+                };
+                const className = palette[payload.status_key] || 'bg-slate-100 text-slate-600';
+                status.className = `rounded-full px-3 py-1 text-xs font-semibold ${className}`;
+                window.showToast?.(`Direct hire is now ${payload.status.toLowerCase()}.`, 'success');
+                if (payload.status_key !== 'pending' && payload.status_key !== 'accepted') {
+                    form.classList.add('hidden');
+                }
+            })
+            .finally(() => window.setButtonLoading?.(button, false));
+        });
+    });
+});
+</script>
+{% endblock %}

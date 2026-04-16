@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings | FundiConnect{% endblock %}
+{% block page_title %}Account settings{% endblock %}
+
+{% block content %}
+<section class="grid gap-8 xl:grid-cols-3">
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell xl:col-span-2">
+        <h2 class="text-2xl font-bold text-slate-900">Security and profile</h2>
+        <p class="mt-2 text-sm text-slate-500">This settings surface now matches the rest of the platform and focuses on the actions that already work in the app.</p>
+        <div class="mt-8 grid gap-4 sm:grid-cols-2">
+            <a href="{% url 'users:profile' %}" class="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-white">
+                <div class="font-semibold text-slate-900"><i class="bi bi-person mr-2"></i>View profile</div>
+                <div class="mt-2 text-sm text-slate-500">Review your current account and professional details.</div>
+            </a>
+            {% if request.user.is_artisan %}
+                <a href="{% url 'users:edit_artisan_profile' %}" class="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-white">
+                    <div class="font-semibold text-slate-900"><i class="bi bi-tools mr-2"></i>Edit artisan profile</div>
+                    <div class="mt-2 text-sm text-slate-500">Update portfolio, availability, and services.</div>
+                </a>
+            {% else %}
+                <a href="{% url 'users:edit_client_profile' %}" class="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-white">
+                    <div class="font-semibold text-slate-900"><i class="bi bi-pencil-square mr-2"></i>Edit client profile</div>
+                    <div class="mt-2 text-sm text-slate-500">Update your contact and project preferences.</div>
+                </a>
+            {% endif %}
+            <a href="{% url 'users:password_change' %}" class="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-white">
+                <div class="font-semibold text-slate-900"><i class="bi bi-key mr-2"></i>Change password</div>
+                <div class="mt-2 text-sm text-slate-500">Refresh your password while staying signed in.</div>
+            </a>
+            <a href="{% url 'users:two_factor_setup' %}" class="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-white">
+                <div class="font-semibold text-slate-900"><i class="bi bi-shield-lock mr-2"></i>Two-factor authentication</div>
+                <div class="mt-2 text-sm text-slate-500">{% if user_has_2fa %}Manage your existing device and backup codes.{% else %}Add an authenticator app for stronger login security.{% endif %}</div>
+            </a>
+            <a href="{% url 'users:delete_account' %}" class="rounded-3xl border border-rose-200 bg-rose-50 p-5 transition hover:bg-white">
+                <div class="font-semibold text-rose-900"><i class="bi bi-trash3 mr-2"></i>Delete account</div>
+                <div class="mt-2 text-sm text-rose-700">Permanently remove this account if you no longer need it.</div>
+            </a>
+        </div>
+    </div>
+
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <h2 class="text-2xl font-bold text-slate-900">Status</h2>
+        <div class="mt-6 space-y-4 text-sm text-slate-600">
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">Email verified:</span> {{ request.user.email_verified|yesno:"Yes,No" }}</div>
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">Phone verified:</span> {{ request.user.phone_verified|yesno:"Yes,No" }}</div>
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">Profile complete:</span> {{ request.user.profile_completed|yesno:"Yes,No" }}</div>
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">2FA enabled:</span> {{ user_has_2fa|yesno:"Yes,No" }}</div>
+        </div>
+    </div>
+</section>
+{% endblock %}

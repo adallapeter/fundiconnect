@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ other_user.display_name }} | Conversation{% endblock %}
+{% block page_title %}Realtime collaboration{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-5xl">
+    <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-shell">
+        <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+            <div class="flex items-center gap-4">
+                <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-slate-200 text-sm font-bold text-slate-700">
+                    {% if other_user.avatar %}
+                        <img src="{{ other_user.avatar.url }}" alt="{{ other_user.display_name }}" class="h-full w-full object-cover">
+                    {% else %}
+                        {{ other_user.display_name|first|upper }}
+                    {% endif %}
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">{{ other_user.display_name }}</h2>
+                    <p class="text-sm text-slate-500">Live messaging is active for this workspace.</p>
+                </div>
+            </div>
+            <a href="{% url 'users:notifications' %}" class="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Back to inbox</a>
+        </div>
+
+        <div id="messages-container" class="h-[60vh] space-y-4 overflow-y-auto bg-slate-50/70 px-6 py-6">
+            {% for message in conversation.messages.all %}
+                <div class="flex {% if message.sender == request.user %}justify-end{% else %}justify-start{% endif %}">
+                    <div class="max-w-xl rounded-3xl px-5 py-4 {% if message.sender == request.user %}bg-slate-900 text-white{% else %}border border-slate-200 bg-white text-slate-900{% endif %}">
+                        <div class="text-sm leading-6">{{ message.content }}</div>
+                        {% if message.attachments.all %}
+                            <div class="mt-3 space-y-2">
+                                {% for attachment in message.attachments.all %}
+                                    <a href="{{ attachment.file.url }}" class="inline-flex items-center gap-2 rounded-xl border border-white/20 px-3 py-2 text-xs {% if message.sender == request.user %}text-white{% else %}text-slate-600{% endif %}">
+                                        <i class="bi bi-paperclip"></i>{{ attachment.file.name|cut:"message_files/" }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="mt-2 text-xs {% if message.sender == request.user %}text-slate-300{% else %}text-slate-500{% endif %}">
+                            {{ message.timestamp|date:"M d, Y H:i" }}
+                            {% if message.sender == request.user and message.is_read %}
+                                <span class="ml-2">• Read</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="border-t border-slate-200 bg-white px-6 py-5">
+            <div id="conversation-typing" class="mb-3 hidden text-xs font-medium text-sky-700"></div>
+            <div id="conversation-user-typing" class="mb-3 hidden text-xs font-medium text-slate-500">You are typing...</div>
+            <form id="message-form" method="post" enctype="multipart/form-data" class="flex flex-col gap-3">
+                {% csrf_token %}
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <div class="flex-1">{{ form.content }}</div>
+                    <div class="flex items-center gap-2">
+                        <label class="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-300 px-4 py-3 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+                            <i class="bi bi-paperclip"></i>
+                            <input type="file" name="attachments" multiple class="hidden">
+                            Attach files
+                        </label>
+                        <button type="submit" class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700" data-loading-label="Sending..."><i class="bi bi-send-fill mr-1"></i>Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('message-form');
+    const textarea = form?.querySelector('textarea');
+    const submitButton = form?.querySelector('button[type="submit"]');
+    const container = document.getElementById('messages-container');
+    const typingNode = document.getElementById('conversation-typing');
+    const userTypingNode = document.getElementById('conversation-user-typing');
+    const conversationId = '{{ conversation.id }}';
+    if (!form || !textarea || !container) return;
+
+    const escapeHtml = (value) => String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    const appendMessage = (message) => {
+        const isOwn = message.is_own || Number(message.sender_id) === Number('{{ request.user.id }}');
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex ${isOwn ? 'justify-end' : 'justify-start'}`;
+        const attachments = (message.attachments || []).map((file) => `
+            <a href="${escapeHtml(file.url)}" class="inline-flex items-center gap-2 rounded-xl border border-white/20 px-3 py-2 text-xs ${isOwn ? 'text-white' : 'text-slate-600'}">
+                <i class="bi bi-paperclip"></i>${escapeHtml(file.name)}
+            </a>
+        `).join('');
+        wrapper.innerHTML = `
+            <div class="max-w-xl rounded-3xl px-5 py-4 ${isOwn ? 'bg-slate-900 text-white' : 'border border-slate-200 bg-white text-slate-900'}">
+                <div class="text-sm leading-6">${escapeHtml(message.content)}</div>
+                ${attachments ? `<div class="mt-3 space-y-2">${attachments}</div>` : ''}
+                <div class="mt-2 text-xs ${isOwn ? 'text-slate-300' : 'text-slate-500'}">${escapeHtml(message.timestamp)}</div>
+            </div>
+        `;
+        container.appendChild(wrapper);
+        container.scrollTop = container.scrollHeight;
+    };
+
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    let socket = null;
+    let typingTimeout = null;
+
+    try {
+        socket = new WebSocket(`${protocol}://${window.location.host}/ws/conversations/${conversationId}/`);
+        socket.addEventListener('message', (event) => {
+            const payload = JSON.parse(event.data);
+            if (payload.type === 'typing') {
+                if (typingNode) {
+                    typingNode.textContent = payload.is_typing ? `${payload.user_name} is typing...` : '';
+                    typingNode.classList.toggle('hidden', !payload.is_typing);
+                }
+                return;
+            }
+            appendMessage(payload);
+        });
+    } catch (error) {
+        console.error(error);
+    }
+
+    textarea.addEventListener('input', () => {
+        if (userTypingNode) {
+            userTypingNode.classList.toggle('hidden', textarea.value.trim().length === 0);
+        }
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({type: 'typing', is_typing: true}));
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({type: 'typing', is_typing: false}));
+                }
+                if (userTypingNode) userTypingNode.classList.add('hidden');
+            }, 800);
+        }
+    });
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const content = textarea.value.trim();
+        if (!content) return;
+        if (userTypingNode) userTypingNode.classList.add('hidden');
+
+        const hasFiles = form.querySelector('input[type="file"]')?.files?.length;
+        if (socket && socket.readyState === WebSocket.OPEN && !hasFiles) {
+            socket.send(JSON.stringify({content}));
+            socket.send(JSON.stringify({type: 'typing', is_typing: false}));
+            textarea.value = '';
+            if (window.setButtonLoading && submitButton) window.setButtonLoading(submitButton, false);
+            return;
+        }
+
+        fetch('', {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then((response) => response.json())
+        .then((payload) => {
+            appendMessage({...payload.message, is_own: true});
+            textarea.value = '';
+        })
+        .finally(() => {
+            if (window.setButtonLoading && submitButton) window.setButtonLoading(submitButton, false);
+        });
+    });
+
+    container.scrollTop = container.scrollHeight;
+});
+</script>
+{% endblock %}

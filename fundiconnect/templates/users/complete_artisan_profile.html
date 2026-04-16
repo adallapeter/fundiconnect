@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}Complete Artisan Profile | FundiConnect{% endblock %}
+{% block page_title %}Build your artisan profile{% endblock %}
+{% block content %}
+<section class="space-y-8">
+    {% include 'users/_artisan_profile_form.html' with heading='Show clients your craft' submit_label='Create artisan profile' %}
+</section>
+{% endblock %}

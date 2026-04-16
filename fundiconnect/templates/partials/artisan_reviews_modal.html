@@ -1,0 +1,15 @@
+<div id="artisan-reviews-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60" data-dismiss-modal></div>
+    <div class="relative max-h-[85vh] w-full max-w-2xl overflow-auto rounded-2xl bg-white p-6 shadow-soft">
+        <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-slate-900">Client reviews</h3>
+            <button type="button" data-dismiss-modal class="text-slate-500 hover:text-slate-800">×</button>
+        </div>
+        <div id="artisan-reviews-content" class="mt-4 space-y-3">
+            {{ reviews_html|safe }}
+        </div>
+        <div class="mt-4 flex justify-end">
+            <button type="button" data-dismiss-modal class="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Close</button>
+        </div>
+    </div>
+</div>

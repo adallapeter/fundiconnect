@@ -1,0 +1,47 @@
+{% for job in jobs %}
+    <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-soft">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div class="space-y-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="{{ job.status_badge_class }}">{{ job.get_status_display }}</span>
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ job.state_badge_class }}">{{ job.state_badge_label }}</span>
+                    {% if job.category %}
+                        <span class="rounded-full bg-slate-800 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">{{ job.category.name }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">{{ job.title }}</h3>
+                    <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{{ job.description|truncatewords:28 }}</p>
+                </div>
+                <div class="flex flex-wrap gap-3 text-sm text-slate-500">
+                    <span>{{ job.location }}</span>
+                    <span>KES {{ job.budget }}</span>
+                    <span>{{ job.bids.count }} bid{{ job.bids.count|pluralize }}</span>
+                    <span>Updated {{ job.updated_at|timesince }} ago</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row lg:flex-col">
+                <a href="{% url 'job_detail' job.id %}" class="rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-slate-700" data-loading-label="Opening..."><i class="bi bi-arrow-up-right-circle mr-1"></i>Open workspace</a>
+                {% if request.user.is_authenticated %}
+                    {% if saved_ids and job.id in saved_ids %}
+                        <button type="button" class="job-save-action rounded-2xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50" data-save-url="{% url 'unsave_job' job.id %}" data-saved="true" data-loading-label="Removing..."><i class="bi bi-bookmark-x mr-1"></i>Saved</button>
+                    {% else %}
+                        <button type="button" class="job-save-action rounded-2xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50" data-save-url="{% url 'save_job' job.id %}" data-saved="false" data-loading-label="Saving..."><i class="bi bi-bookmark-plus mr-1"></i>Save</button>
+                    {% endif %}
+                {% endif %}
+                {% if request.user.is_authenticated and request.user.is_client and job.client == request.user %}
+                    <a href="{% url 'edit_job' job.id %}" class="rounded-2xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50" data-loading-label="Opening..."><i class="bi bi-pencil-square mr-1"></i>Edit job</a>
+                {% elif request.user.is_authenticated and request.user.is_artisan and job.status == 'open' %}
+                    <a href="{% url 'place_bid' job.id %}" class="rounded-2xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50" data-loading-label="Opening..."><i class="bi bi-send-check mr-1"></i>Bid now</a>
+                {% endif %}
+            </div>
+        </div>
+    </article>
+{% empty %}
+    <div class="rounded-3xl border border-dashed border-slate-300 bg-white/70 p-12 text-center shadow-sm">
+        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-sky-700"><i class="bi bi-search text-2xl"></i></div>
+        <h3 class="mt-4 text-xl font-bold text-slate-900">No jobs match this view</h3>
+        <p class="mt-2 text-sm text-slate-500">Try a different filter, search phrase, or status.</p>
+    </div>
+{% endfor %}

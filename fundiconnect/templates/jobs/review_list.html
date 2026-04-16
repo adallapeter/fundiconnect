@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Reviews | FundiConnect{% endblock %}
+{% block page_title %}Reviews{% endblock %}
+{% block content %}
+<section class="grid gap-8 xl:grid-cols-2">
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <h2 class="text-2xl font-bold text-slate-900">Received reviews</h2>
+        <div class="mt-6 space-y-4">
+            {% for review in received_reviews %}
+                <div class="rounded-3xl bg-slate-50 p-5">
+                    <div class="font-semibold text-slate-900">{{ review.author.display_name }} • {{ review.rating }}/5</div>
+                    <div class="mt-2 text-sm text-slate-600">{{ review.comment }}</div>
+                </div>
+            {% empty %}
+                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-amber-500 shadow-sm"><i class="bi bi-star text-2xl"></i></div>
+                    <div class="mt-4 font-semibold text-slate-900">No reviews received yet</div>
+                    <div class="mt-2 text-sm text-slate-500">Completed jobs and strong client feedback will appear here.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <h2 class="text-2xl font-bold text-slate-900">Written by you</h2>
+        <div class="mt-6 space-y-4">
+            {% for review in authored_reviews %}
+                <div class="rounded-3xl bg-slate-50 p-5">
+                    <div class="font-semibold text-slate-900">{{ review.recipient.display_name }} • {{ review.rating }}/5</div>
+                    <div class="mt-2 text-sm text-slate-600">{{ review.comment }}</div>
+                </div>
+            {% empty %}
+                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-sky-700 shadow-sm"><i class="bi bi-pencil-square text-2xl"></i></div>
+                    <div class="mt-4 font-semibold text-slate-900">No authored reviews yet</div>
+                    <div class="mt-2 text-sm text-slate-500">When you review completed work, those notes will show here.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

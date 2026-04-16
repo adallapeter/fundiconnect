@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Artisans | FundiConnect{% endblock %}
+{% block page_title %}Find skilled fundis{% endblock %}
+
+{% block content %}
+<section class="space-y-8">
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <h2 class="text-3xl font-extrabold text-slate-900">Browse artisan profiles</h2>
+                <p class="mt-2 text-sm text-slate-500">Use live filters to narrow the list without leaving the page.</p>
+            </div>
+        </div>
+        <form id="artisan-filter-form" class="mt-6 grid gap-3 lg:grid-cols-6" data-assistant-endpoint="{% url 'users:assistant_respond' %}" data-assistant-context='{"page":"artisan_search"}'>
+            <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search by name or bio" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500 lg:col-span-2">
+            <input type="search" name="skill" value="{{ request.GET.skill }}" placeholder="Skill or specialization" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+            <input type="search" name="location" value="{{ request.GET.location }}" placeholder="Location" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+            <select name="category" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+                <option value="">All categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.slug }}" {% if request.GET.category == category.slug %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="availability" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+                <option value="">Any availability</option>
+                <option value="available" {% if request.GET.availability == 'available' %}selected{% endif %}>Available</option>
+                <option value="busy" {% if request.GET.availability == 'busy' %}selected{% endif %}>Busy</option>
+                <option value="unavailable" {% if request.GET.availability == 'unavailable' %}selected{% endif %}>Unavailable</option>
+            </select>
+            <select name="rating" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+                <option value="">Any rating</option>
+                <option value="4" {% if request.GET.rating == '4' %}selected{% endif %}>4+ stars</option>
+                <option value="3" {% if request.GET.rating == '3' %}selected{% endif %}>3+ stars</option>
+                <option value="2" {% if request.GET.rating == '2' %}selected{% endif %}>2+ stars</option>
+            </select>
+            <select name="rate" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+                <option value="">Any rate</option>
+                <option value="low" {% if request.GET.rate == 'low' %}selected{% endif %}>Budget friendly</option>
+                <option value="medium" {% if request.GET.rate == 'medium' %}selected{% endif %}>Standard</option>
+                <option value="high" {% if request.GET.rate == 'high' %}selected{% endif %}>Premium</option>
+            </select>
+            <select name="sort" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+                <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Newest</option>
+                <option value="rating" {% if request.GET.sort == 'rating' %}selected{% endif %}>Highest rated</option>
+                <option value="rate_low" {% if request.GET.sort == 'rate_low' %}selected{% endif %}>Lowest rate</option>
+                <option value="rate_high" {% if request.GET.sort == 'rate_high' %}selected{% endif %}>Highest rate</option>
+            </select>
+        </form>
+    </div>
+    <div class="mt-4" id="ai-suggestion-slot-artisans"></div>
+
+    <div id="artisan-results" class="space-y-4">
+        {% include 'partials/artisans_list.html' with artisans=artisans %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('artisan-filter-form');
+    const results = document.getElementById('artisan-results');
+    if (!form || !results) return;
+
+    let timer = null;
+    const updateArtisans = () => {
+        const params = new URLSearchParams(new FormData(form));
+        fetch(`{% url 'users:artisan_list_ajax' %}?${params.toString()}`, {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then((response) => response.json())
+        .then((payload) => {
+            results.innerHTML = payload.html;
+        });
+    };
+
+    form.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(updateArtisans, 220);
+    });
+    form.addEventListener('change', updateArtisans);
+});
+</script>
+{% endblock %}

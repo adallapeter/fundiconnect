@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Client Dashboard | FundiConnect{% endblock %}
+{% block page_title %}Client control center{% endblock %}
+
+{% block content %}
+<section class="space-y-8">
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="text-sm text-slate-500">Active projects</div>
+            <div class="mt-3 text-4xl font-extrabold text-slate-900">{{ stats.active_projects }}</div>
+        </div>
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="text-sm text-slate-500">Pending bids</div>
+            <div class="mt-3 text-4xl font-extrabold text-slate-900">{{ stats.pending_bids }}</div>
+        </div>
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="text-sm text-slate-500">Completed jobs</div>
+            <div class="mt-3 text-4xl font-extrabold text-slate-900">{{ stats.completed_jobs }}</div>
+        </div>
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="text-sm text-slate-500">Unread messages</div>
+            <div class="mt-3 text-4xl font-extrabold text-slate-900">{{ stats.unread_messages }}</div>
+        </div>
+    </div>
+
+    <div class="grid gap-8 xl:grid-cols-[1.4fr_1fr]">
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Live project queue</h2>
+                    <p class="mt-2 text-sm text-slate-500">Open your jobs, review bids, and move work into delivery with fewer clicks.</p>
+                </div>
+                <a href="{% url 'post_job' %}" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700">Post a job</a>
+            </div>
+            <div class="mt-6 space-y-4">
+                {% for job in active_projects %}
+                    <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900">{{ job.title }}</h3>
+                                <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                                    <span>{{ job.location }}</span>
+                                    <span class="{{ job.status_badge_class }}">{{ job.get_status_display }}</span>
+                                </div>
+                            </div>
+                            <a href="{% url 'job_detail' job.id %}" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-white">Open workspace</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">No active projects yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="space-y-8">
+            <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+                <h2 class="text-2xl font-bold text-slate-900">Recommended fundis</h2>
+                <div class="mt-6 space-y-4">
+                    {% for artisan in recommended_artisans %}
+                        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="font-semibold text-slate-900">{{ artisan.full_name }}</div>
+                                    <div class="mt-1 text-sm text-slate-500">{{ artisan.specialization }}</div>
+                                    <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 font-semibold text-amber-700"><i class="bi bi-star-fill"></i>{{ artisan.average_rating|floatformat:1 }}</span>
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 font-semibold text-sky-700"><i class="bi bi-shield-check"></i>{{ artisan.credibility_score|default:0 }} credibility</span>
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2.5 py-1 font-semibold text-slate-700"><i class="bi bi-chat-heart"></i>{{ artisan.total_reviews }} reviews</span>
+                                    </div>
+                                    <div class="mt-3 text-sm text-slate-500">{{ artisan.location }} • KES {{ artisan.hourly_rate }}/hr</div>
+                                </div>
+                                <button type="button" class="view-reviews-btn rounded-2xl border border-sky-300 px-3 py-2 text-xs font-semibold text-sky-700 hover:bg-white" data-review-url="{% url 'users:artisan_reviews_ajax' artisan.user.id %}"><i class="bi bi-chat-dots mr-1"></i>Reviews</button>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-sm text-slate-500">No recommendations yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+                <h2 class="text-2xl font-bold text-slate-900">Recent activity</h2>
+                <div class="mt-6 space-y-4">
+                    {% for item in recent_activity %}
+                        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="font-medium text-slate-900">{{ item.description }}</div>
+                            <div class="mt-1 text-sm text-slate-500">{{ item.timestamp|timesince }} ago</div>
+                        </div>
+                    {% empty %}
+                        <div class="text-sm text-slate-500">Activity will appear here as jobs and bids move.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <form id="ai-client-dashboard-form" style="display:none" data-assistant-endpoint="{% url 'users:assistant_respond' %}" data-assistant-context='{"page":"client_dashboard"}'></form>
+    <div id="ai-suggestion-slot-client-dashboard" class="mt-4"></div>
+</section>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load job_ui %}
+{% block title %}{{ category.name }} | FundiConnect{% endblock %}
+{% block page_title %}{{ category.name }} specialists{% endblock %}
+{% block content %}
+<section class="space-y-8">
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <h2 class="flex items-center gap-3 text-3xl font-extrabold text-slate-900"><i class="bi {{ category|category_icon }} text-sky-700"></i>{{ category.name }}</h2>
+        <p class="mt-2 text-sm text-slate-500">{{ category.description|default:"Browse available artisans in this specialty." }}</p>
+    </div>
+    {% include 'partials/artisans_list.html' with artisans=artisans %}
+</section>
+{% endblock %}

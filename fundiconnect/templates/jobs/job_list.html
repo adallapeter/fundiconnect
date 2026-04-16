@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Jobs | FundiConnect{% endblock %}
+{% block page_title %}Job flow without friction{% endblock %}
+
+{% block content %}
+<section class="space-y-8">
+    <div class="grid gap-4 lg:grid-cols-4">
+        {% for label, value in stats.items %}
+            <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{{ label|cut:"_" }}</div>
+                <div class="mt-3 text-3xl font-extrabold text-slate-900">{{ value }}</div>
+            </div>
+        {% empty %}
+            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-4">
+                <h2 class="text-2xl font-bold text-slate-900">Open jobs across the platform</h2>
+                <p class="mt-2 text-slate-500">Browse and filter live opportunities in a cleaner workspace.</p>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="mt-3" id="ai-suggestion-slot-jobs"></div>
+
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-shell">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">
+                    {% if view_type == 'client_management' %}Your jobs{% elif view_type == 'artisan_management' %}Your active opportunity stream{% else %}Live job board{% endif %}
+                </h2>
+                <p class="mt-2 text-sm text-slate-500">Filters update the list in place so browsing stays fast.</p>
+            </div>
+            {% if request.user.is_authenticated and request.user.is_client %}
+                <a href="{% url 'post_job' %}" class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-700">Post a new job</a>
+            {% endif %}
+        </div>
+
+        <form id="job-filter-form" class="mt-6 grid gap-3 lg:grid-cols-6">
+            <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search title, location, category" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none ring-0 focus:border-slate-500 lg:col-span-2">
+            <input type="search" name="location" value="{{ request.GET.location }}" placeholder="Location" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none ring-0 focus:border-slate-500">
+            <select name="category" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+                <option value="">All categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="status" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+                <option value="">Any status</option>
+                <option value="open" {% if request.GET.status == 'open' %}selected{% endif %}>Open</option>
+                <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In progress</option>
+                <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="closed" {% if request.GET.status == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+            <select name="budget" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+                <option value="">Any budget</option>
+                <option value="low" {% if request.GET.budget == 'low' %}selected{% endif %}>Under 5,000</option>
+                <option value="medium" {% if request.GET.budget == 'medium' %}selected{% endif %}>5,000 - 20,000</option>
+                <option value="high" {% if request.GET.budget == 'high' %}selected{% endif %}>Above 20,000</option>
+            </select>
+        </form>
+
+        {% if view_type == 'artisan_management' %}
+            <div class="mt-4 flex flex-wrap gap-2">
+                <a href="?tab=available" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.GET.tab|default:'available' == 'available' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600{% endif %}">Available</a>
+                <a href="?tab=active" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.GET.tab == 'active' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600{% endif %}">In progress</a>
+                <a href="?tab=completed" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.GET.tab == 'completed' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600{% endif %}">Completed</a>
+                <a href="?tab=bids" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.GET.tab == 'bids' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600{% endif %}">All bids</a>
+            </div>
+        {% endif %}
+        {% if request.user.is_authenticated %}
+            <div class="mt-4 flex flex-wrap gap-2">
+                <a href="?saved=1" class="rounded-full px-4 py-2 text-sm font-semibold {% if request.GET.saved == '1' %}bg-slate-900 text-white{% else %}bg-slate-100 text-slate-600{% endif %}">Saved jobs</a>
+            </div>
+        {% endif %}
+
+        <div id="job-results" class="mt-6 space-y-4">
+            {% include 'partials/job_cards.html' with jobs=jobs %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('job-filter-form');
+    const results = document.getElementById('job-results');
+    if (!form || !results) return;
+
+    let timer = null;
+    const updateResults = () => {
+        const params = new URLSearchParams(new FormData(form));
+        const current = new URL(window.location.href);
+        const tab = current.searchParams.get('tab');
+        if (tab) params.set('tab', tab);
+        const saved = current.searchParams.get('saved');
+        if (saved) params.set('saved', saved);
+
+        fetch(`${window.location.pathname}?${params.toString()}`, {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then((response) => response.json())
+        .then((payload) => {
+            results.innerHTML = payload.html;
+            window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+        });
+    };
+
+    form.addEventListener('input', () => {
+        clearTimeout(timer);
+        timer = setTimeout(updateResults, 220);
+    });
+    form.addEventListener('change', updateResults);
+
+    results.addEventListener('click', (event) => {
+        const button = event.target.closest('.job-save-action');
+        if (!button) return;
+        event.preventDefault();
+        window.setButtonLoading?.(button, true);
+        fetch(button.dataset.saveUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': window.getCsrfToken?.() || ''
+            }
+        })
+        .then((response) => response.json())
+        .then((payload) => {
+            const saved = payload.saved;
+            button.dataset.saved = saved ? 'true' : 'false';
+            button.dataset.saveUrl = saved ? button.dataset.saveUrl.replace('/save/', '/unsave/') : button.dataset.saveUrl.replace('/unsave/', '/save/');
+            button.innerHTML = saved
+                ? '<i class="bi bi-bookmark-x mr-1"></i>Saved'
+                : '<i class="bi bi-bookmark-plus mr-1"></i>Save';
+            if (saved && !button.classList.contains('border')) {
+                button.classList.remove('bg-slate-900', 'text-white');
+                button.classList.add('border', 'border-slate-300', 'text-slate-700');
+            }
+            if (!saved && new URLSearchParams(window.location.search).get('saved') === '1') {
+                const card = button.closest('article');
+                if (card) card.remove();
+            }
+        })
+        .catch(() => window.showToast?.('Unable to update saved jobs right now.', 'error'))
+        .finally(() => window.setButtonLoading?.(button, false));
+    });
+});
+</script>
+{% endblock %}

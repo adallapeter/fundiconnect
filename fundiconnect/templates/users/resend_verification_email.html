@@ -1,0 +1,16 @@
+{% extends 'auth_base.html' %}
+{% block title %}Resend Verification | FundiConnect{% endblock %}
+{% block auth_content %}
+<div>
+    <div class="inline-flex rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-600">Verification</div>
+    <h1 class="mt-6 text-4xl font-extrabold text-slate-900">Need a new code?</h1>
+    <p class="mt-3 text-sm leading-6 text-slate-500">We can resend your verification email so you can keep moving through onboarding.</p>
+    <form method="post" class="mt-8">
+        {% csrf_token %}
+        <button type="submit" class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700">
+            <i class="bi bi-envelope-arrow-up mr-2"></i>
+            Resend verification email
+        </button>
+    </form>
+</div>
+{% endblock %}

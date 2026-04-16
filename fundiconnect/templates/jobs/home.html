@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load job_ui %}
+{% block title %}FundiConnect{% endblock %}
+{% block page_title %}Modern artisan marketplace{% endblock %}
+{% block content %}
+<section class="space-y-10">
+    <div class="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+        <div class="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 text-white shadow-2xl">
+            <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.28),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(45,212,191,0.18),transparent_28%)]"></div>
+            <div class="inline-flex rounded-full border border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-200">
+                {% if home_mode == 'client' %}Client workspace{% elif home_mode == 'artisan' %}Artisan workspace{% else %}Live operations{% endif %}
+            </div>
+            {% if home_mode == 'client' %}
+                <h2 class="mt-8 text-5xl font-extrabold leading-tight">Keep your active jobs, incoming bids, and top fundis moving from one dashboard.</h2>
+                <p class="mt-6 max-w-2xl text-base leading-7 text-slate-300">Your workspace is tuned for hiring momentum, with live messaging, quick action links, and artisan discovery close at hand.</p>
+            {% elif home_mode == 'artisan' %}
+                <h2 class="mt-8 text-5xl font-extrabold leading-tight">See the newest matching jobs, active work, and your next best opportunities in one place.</h2>
+                <p class="mt-6 max-w-2xl text-base leading-7 text-slate-300">FundiConnect keeps your bids, delivery conversations, and credibility in sync so you can focus on winning and completing work.</p>
+            {% else %}
+                <h2 class="mt-8 text-5xl font-extrabold leading-tight">Post jobs, compare bids, and deliver work from one cleaner workspace.</h2>
+                <p class="mt-6 max-w-2xl text-base leading-7 text-slate-300">FundiConnect now leans into a modern light navy-grey platform language while keeping the experience fast, realtime, and easier to trust.</p>
+            {% endif %}
+            <div class="relative z-10 mt-8 flex flex-wrap gap-3">
+                <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 backdrop-blur" data-tooltip="Only aggregate marketplace signals are shown here."><i class="bi bi-people-fill text-sky-300"></i>{{ stats.active_artisans }} available now</span>
+                <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 backdrop-blur"><i class="bi bi-patch-check-fill text-emerald-300"></i>{{ stats.verified_artisans }} verified artisans</span>
+                <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 backdrop-blur"><i class="bi bi-stars text-amber-300"></i>{{ stats.average_rating|default:0 }} avg rating</span>
+            </div>
+            <div class="mt-8 flex flex-wrap gap-3">
+                <a href="{% url 'job_list' %}" class="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 hover:bg-slate-100"><i class="bi bi-briefcase mr-2"></i>Explore jobs</a>
+                {% if request.user.is_authenticated and request.user.is_client %}
+                    <a href="{% url 'post_job' %}" class="rounded-2xl border border-white/20 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"><i class="bi bi-plus-circle mr-2"></i>Post a job</a>
+                {% elif request.user.is_authenticated and request.user.is_artisan %}
+                    <a href="{% url 'artisan_bids' %}" class="rounded-2xl border border-white/20 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"><i class="bi bi-journal-check mr-2"></i>Open my bids</a>
+                {% else %}
+                    <a href="{% url 'users:register' %}" class="rounded-2xl border border-white/20 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"><i class="bi bi-person-plus mr-2"></i>Create account</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-shell hover-lift">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 text-sm text-slate-500"><i class="bi bi-people-fill text-sky-600"></i>Available artisans</div>
+                        <div class="mt-1 text-2xl font-extrabold text-slate-900">{{ stats.active_artisans }}</div>
+                        <div class="mt-2 text-xs text-slate-500">Verified profiles: {{ stats.verified_artisans }}</div>
+                    </div>
+                    <div class="rounded-2xl bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-700">Updated {{ stats.updated_at|default:"Now" }}</div>
+                </div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-shell hover-lift">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 text-sm text-slate-500"><i class="bi bi-check2-square text-emerald-600"></i>Completed projects</div>
+                        <div class="mt-1 text-2xl font-extrabold text-slate-900">{{ stats.completed_projects }}</div>
+                        <div class="mt-2 text-xs text-slate-500">{{ stats.open_jobs|default:0 }} open opportunities still live</div>
+                    </div>
+                    <div class="rounded-2xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">+{{ stats.completed_month|default:0 }} this month</div>
+                </div>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-shell hover-lift sm:col-span-2 xl:col-span-1">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-sm text-slate-500"><i class="bi bi-stars text-amber-500"></i>Satisfaction rate</div>
+                    <div class="text-xs font-semibold text-slate-500">{{ stats.total_reviews|default:0 }} reviews</div>
+                </div>
+                <div class="mt-3 flex items-center gap-3">
+                    <div class="text-2xl font-extrabold text-slate-900">{{ stats.satisfaction_rate }}%</div>
+                    <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div class="h-full bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-500" style="width: {{ stats.satisfaction_rate }}%"></div>
+                    </div>
+                </div>
+                <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+                    <span class="rounded-full bg-amber-50 px-3 py-1 font-semibold text-amber-700">{{ stats.average_rating|default:0 }}/5 avg</span>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">{{ stats.positive_ratio|default:0 }}% positive reviews</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="ai-home-form" class="hidden" data-assistant-endpoint="{% url 'users:assistant_respond' %}" data-assistant-context='{"page":"home"}'></form>
+    <div id="ai-suggestion-slot-home" class="rounded-[2rem] border border-slate-200 bg-white/90 p-2 shadow-shell"></div>
+
+    {% if request.user.is_authenticated %}
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-shell">
+            <div class="text-sm text-slate-500">{{ primary_stat_label|default:"Your open items" }}</div>
+            <div class="mt-3 text-4xl font-extrabold text-slate-900">{{ primary_stat_value|default:0 }}</div>
+        </div>
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-shell">
+            <div class="text-sm text-slate-500">In progress</div>
+            <div class="mt-3 text-4xl font-extrabold text-slate-900">{{ personal_stats.active_jobs|default:0 }}</div>
+        </div>
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-shell">
+            <div class="text-sm text-slate-500">Completed</div>
+            <div class="mt-3 text-4xl font-extrabold text-slate-900">{{ personal_stats.completed_jobs|default:0 }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <div class="flex items-center justify-between">
+            <h3 class="flex items-center gap-3 text-2xl font-bold text-slate-900"><i class="bi bi-grid-3x3-gap-fill text-sky-700"></i>Categories</h3>
+            <a href="{% url 'category_list' %}" class="text-sm font-semibold text-slate-600 hover:text-slate-900"><i class="bi bi-arrow-right-circle mr-1"></i>Browse all</a>
+        </div>
+        <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {% for category in categories %}
+                <a href="{% url 'category_detail' category.slug %}" class="rounded-3xl border border-slate-200 bg-slate-50 p-5 transition hover:bg-white">
+                    <div class="flex items-center gap-3 text-lg font-bold text-slate-900"><i class="bi {{ category|category_icon }} text-sky-700"></i>{{ category.name }}</div>
+                    <div class="mt-2 text-sm text-slate-500">{{ category.description|default:"Skilled professionals ready to help."|truncatewords:12 }}</div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="grid gap-8 xl:grid-cols-2">
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+            <h3 class="text-2xl font-bold text-slate-900">
+                {% if home_mode == 'client' %}Your recent jobs{% elif home_mode == 'artisan' %}Matching jobs for you{% else %}Recent jobs{% endif %}
+            </h3>
+            <div class="mt-6 flex items-start gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide" style="scroll-behavior: smooth;">
+                {% for job in personal_jobs|default:recent_jobs %}
+                    <article class="group relative flex-shrink-0 w-72 snap-start rounded-2xl bg-gradient-to-br from-white via-white to-blue-50/30 border border-slate-200/80 p-5 shadow-md hover:shadow-lg transition-all duration-300 hover-lift animate-rise overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-r from-sky-400/0 via-sky-400/0 to-blue-500/0 group-hover:to-blue-500/5 transition-all duration-300"></div>
+                        <div class="relative z-10 flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-100 to-blue-100 flex items-center justify-center font-bold text-sky-700 shadow-md group-hover:shadow-lg transition-shadow"><i class="bi bi-briefcase-fill"></i></div>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <a href="{% url 'job_detail' job.id %}" class="block text-sm font-bold text-slate-900 truncate group-hover:text-sky-700 transition-colors">{{ job.title }}</a>
+                                <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                                    <span><i class="bi bi-geo-alt-fill text-sky-600 mr-1"></i>{{ job.location }}</span>
+                                    <span class="text-slate-400">•</span>
+                                    <span class="font-semibold text-emerald-700">KES {{ job.budget|floatformat:0 }}</span>
+                                </div>
+                                <div class="mt-3 text-xs text-slate-700 leading-relaxed line-clamp-2">{{ job.description|truncatechars:100 }}</div>
+                            </div>
+                            <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                                <a href="{% url 'job_detail' job.id %}" class="rounded-xl bg-sky-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-sky-700 shadow-sm hover:shadow-md transition-all active:scale-95">View</a>
+                                <span class="inline-block rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">{{ job.get_urgency_display }}</span>
+                            </div>
+                        </div>
+                    </article>
+                {% empty %}
+                    <div class="rounded-3xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-slate-100 p-8 text-center">
+                        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-sky-700 shadow-md mb-3"><i class="bi bi-briefcase text-2xl"></i></div>
+                        <div class="font-bold text-slate-900">No open jobs yet</div>
+                        <p class="mt-1 text-xs text-slate-600">Check back soon for new opportunities!</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+            <h3 class="text-2xl font-bold text-slate-900">
+                {% if home_mode == 'client' %}Recommended artisans{% elif home_mode == 'artisan' %}Your active work{% else %}Featured artisans{% endif %}
+            </h3>
+                <div class="mt-6 grid gap-4">
+                    {% if home_mode == 'artisan' %}
+                        {% for job in my_active_jobs %}
+                            <article class="group relative rounded-2xl bg-gradient-to-br from-white via-white to-violet-50/30 border border-slate-200/80 p-5 shadow-md hover:shadow-lg transition-all duration-300 hover-lift overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-r from-violet-400/0 via-violet-400/0 to-purple-500/0 group-hover:to-purple-500/5 transition-all duration-300"></div>
+                                <div class="relative z-10 flex items-start gap-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center font-bold text-violet-700 shadow-md group-hover:shadow-lg transition-shadow"><i class="bi bi-kanban"></i></div>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <a href="{% url 'job_detail' job.id %}" class="block text-sm font-bold text-slate-900 truncate group-hover:text-violet-700 transition-colors">{{ job.title }}</a>
+                                        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+                                            <span><i class="bi bi-geo-alt-fill text-violet-600 mr-1"></i>{{ job.location }}</span>
+                                            <span class="text-slate-400">•</span>
+                                            <span class="inline-block rounded-full bg-purple-100 px-2.5 py-0.5 font-semibold text-purple-800">{{ job.get_status_display }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                                        <a href="{% url 'job_detail' job.id %}" class="rounded-xl bg-violet-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-violet-700 shadow-sm hover:shadow-md transition-all active:scale-95">View</a>
+                                    </div>
+                                </div>
+                            </article>
+                        {% empty %}
+                            <div class="rounded-3xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-slate-100 p-8 text-center">
+                                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-violet-700 shadow-md mb-3"><i class="bi bi-kanban text-2xl"></i></div>
+                                <div class="font-bold text-slate-900">No active jobs yet</div>
+                                <p class="mt-1 text-xs text-slate-600">Your active work will appear here.</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="flex items-start gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide" style="scroll-behavior: smooth;">
+                        {% for artisan in recommended_artisans|default:featured_artisans %}
+                            <article class="group relative flex-shrink-0 w-80 snap-start rounded-2xl bg-gradient-to-br from-white via-white to-emerald-50/30 border border-slate-200/80 p-5 shadow-md hover:shadow-lg transition-all duration-300 hover-lift animate-rise overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-r from-emerald-400/0 via-emerald-400/0 to-green-500/0 group-hover:to-green-500/5 transition-all duration-300"></div>
+                                <div class="relative z-10 flex items-start gap-4">
+                                    <div class="flex-shrink-0 relative">
+                                        <div class="h-16 w-16 rounded-xl bg-gradient-to-br from-slate-200 to-slate-100 flex items-center justify-center overflow-hidden text-sm font-bold text-slate-700 shadow-md ring-2 ring-white group-hover:shadow-lg transition-all">
+                                            {% if artisan.profile_picture %}
+                                                <img src="{{ artisan.profile_picture.url }}" alt="{{ artisan.full_name }}" class="h-full w-full object-cover">
+                                            {% else %}
+                                                <span class="text-lg">{{ artisan.full_name|first|upper }}</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if artisan.average_rating|floatformat:0 >= 4.5 %}
+                                            <div class="absolute -right-1 -bottom-1 bg-emerald-500 rounded-full p-1 shadow-md" title="Top rated"><i class="bi bi-star-fill text-white text-xs"></i></div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="min-w-0">
+                                                <a href="{% url 'users:artisan_detail' artisan.id %}" class="block font-bold text-slate-900 group-hover:text-emerald-700 transition-colors truncate">{{ artisan.full_name }}</a>
+                                                <div class="mt-1 text-xs text-slate-600 truncate">{{ artisan.specialization }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                                            <div class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-amber-700" title="Rating">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= artisan.average_rating|floatformat:0 %}
+                                                        <i class="bi bi-star-fill text-xs"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star text-xs text-slate-300"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                <span class="ml-1 text-xs font-semibold">{{ artisan.average_rating|floatformat:1 }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                                                <i class="bi bi-check-circle-fill text-emerald-500"></i>
+                                                <span class="font-semibold">{{ artisan.completed_projects }} jobs</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 text-xs text-slate-600">
+                                                <i class="bi bi-shield-check text-sky-600"></i>
+                                                <span class="font-semibold">{{ artisan.credibility_score|default:0 }} credibility</span>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                                            <div class="h-full bg-gradient-to-r from-emerald-400 to-green-500 transition-all duration-500" style="width: {{ artisan.trust_score|default:0 }}%"></div>
+                                        </div>
+                                        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-600 font-semibold">
+                                            <span>Trust: {{ artisan.trust_score|default:0 }}%</span>
+                                            <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-600">{{ artisan.total_reviews }} reviews</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="relative z-10 mt-4 flex flex-wrap gap-2 border-t border-slate-200 pt-3">
+                                    <a href="{% url 'users:artisan_detail' artisan.id %}" class="flex-1 rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors shadow-sm hover:shadow-md text-center active:scale-95">Profile</a>
+                                    {% if request.user.is_client %}
+                                        <a href="{% url 'users:hire_artisan' artisan.user.id %}" class="flex-1 rounded-lg border-2 border-emerald-500 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors">Hire</a>
+                                    {% endif %}
+                                    <button type="button" class="view-reviews-btn rounded-lg border border-sky-300 px-3 py-1.5 text-xs font-bold text-sky-700 hover:bg-sky-50 transition-colors" data-review-url="{% url 'users:artisan_reviews_ajax' artisan.user.id %}"><i class="bi bi-chat-dots-fill mr-1"></i>Reviews</button>
+                                </div>
+                            </article>
+                        {% empty %}
+                            <div class="rounded-3xl border border-dashed border-slate-300 bg-gradient-to-br from-slate-50 to-slate-100 p-8 text-center">
+                                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-md mb-3"><i class="bi bi-people text-2xl"></i></div>
+                                <div class="font-bold text-slate-900">No featured artisans available</div>
+                                <p class="mt-1 text-xs text-slate-600">Check back soon for new recommendations!</p>
+                            </div>
+                        {% endfor %}
+                        </div>
+            {% endif %}
+                </div>
+        </div>
+    </div>
+
+    <div class="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900"><i class="bi bi-lightning-charge-fill mr-2 text-amber-500"></i>Recent success stories</h3>
+                    <p class="mt-2 text-sm text-slate-500">Fresh client feedback and delivery wins help the marketplace feel alive and trustworthy.</p>
+                </div>
+                <div class="hidden rounded-full bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 md:inline-flex">Live trust signals</div>
+            </div>
+            <div class="mt-6 grid gap-4">
+                {% for story in success_stories %}
+                    <article class="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-white to-amber-50/40 p-5 hover-lift animate-rise">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="flex items-center gap-2 text-sm font-bold text-slate-900">
+                                    <i class="bi bi-star-fill text-amber-500"></i>{{ story.job.title }}
+                                </div>
+                                <div class="mt-2 text-xs text-slate-500">Reviewed by {{ story.author.display_name }} for {{ story.recipient.display_name }}</div>
+                            </div>
+                            <div class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">{{ story.rating }}/5</div>
+                        </div>
+                        <p class="mt-4 text-sm leading-7 text-slate-600">{{ story.comment|truncatechars:170 }}</p>
+                    </article>
+                {% empty %}
+                    <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
+                        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-amber-600 shadow-md"><i class="bi bi-chat-heart text-2xl"></i></div>
+                        <div class="mt-3 font-semibold text-slate-900">No recent success stories yet</div>
+                        <p class="mt-2">Completed project reviews will appear here as clients rate artisans.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+            <h3 class="text-2xl font-bold text-slate-900"><i class="bi bi-megaphone-fill mr-2 text-sky-600"></i>Marketplace pulse</h3>
+            <div class="mt-6 space-y-4">
+                <div class="rounded-3xl bg-slate-50 p-5">
+                    <div class="flex items-center gap-2 text-sm font-semibold text-slate-700"><i class="bi bi-clock-history text-sky-600"></i>Average response time</div>
+                    <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ stats.avg_response_time }} mins</div>
+                    <p class="mt-2 text-sm text-slate-500">Clients and artisans get quick feedback loops when bids, messages, and updates stay active.</p>
+                </div>
+                <div class="rounded-3xl bg-slate-50 p-5">
+                    <div class="flex items-center gap-2 text-sm font-semibold text-slate-700"><i class="bi bi-stars text-emerald-600"></i>Review momentum</div>
+                    <div class="mt-2 text-3xl font-extrabold text-slate-900">{{ stats.total_reviews|default:0 }}</div>
+                    <p class="mt-2 text-sm text-slate-500">The platform satisfaction score blends average rating and the share of 4 to 5 star reviews.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

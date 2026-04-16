@@ -1,0 +1,436 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#334155">
+    <title>{% block title %}FundiConnect{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: '#0f172a',
+                        slateblue: '#334155',
+                        mist: '#e2e8f0',
+                        panel: '#f8fafc',
+                        accent: '#475569',
+                        brand: '#1e293b'
+                    },
+                    boxShadow: {
+                        shell: '0 24px 60px rgba(15, 23, 42, 0.08)',
+                        soft: '0 10px 30px rgba(51, 65, 85, 0.12)'
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+        :root {
+            color-scheme: light;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(148, 163, 184, 0.18), transparent 30%),
+                radial-gradient(circle at 20% 80%, rgba(251, 191, 36, 0.10), transparent 24%),
+                radial-gradient(circle at 85% 15%, rgba(34, 197, 94, 0.10), transparent 20%),
+                radial-gradient(circle at 90% 75%, rgba(244, 114, 182, 0.12), transparent 26%),
+                linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            color: #0f172a;
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(148, 163, 184, 0.28) transparent;
+        }
+        *::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        *::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        *::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.26);
+            border-radius: 999px;
+            border: 1px solid transparent;
+        }
+        *::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.38);
+        }
+        #main-content {
+            transition: margin-left .3s ease;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(18px);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #0f172a, #2563eb, #db2777);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .animate-rise {
+            animation: riseIn .45s ease both;
+        }
+        .animate-float-soft {
+            animation: floatSoft 6s ease-in-out infinite;
+        }
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes floatSoft {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .hover-lift {
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 22px 45px rgba(15, 23, 42, 0.12);
+        }
+        .pulse-soft {
+            animation: pulseSoft 3.2s ease-in-out infinite;
+        }
+        @keyframes pulseSoft {
+            0%, 100% { opacity: 1; transform: translateY(0); }
+            50% { opacity: 0.85; transform: translateY(-2px); }
+        }
+        .assistant-glow {
+            animation: assistantGlow 3.2s ease-in-out infinite;
+        }
+        .location-picker-shell {
+            display: grid;
+            gap: 0.85rem;
+        }
+        .location-picker-toolbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        .location-picker-map {
+            min-height: 14rem;
+            border-radius: 1.4rem;
+            overflow: hidden;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(226, 232, 240, 0.8));
+        }
+        .location-suggestion-list {
+            position: static;
+        }
+        @media (max-width: 767.98px) {
+            .location-picker-toolbar {
+                grid-template-columns: 1fr;
+            }
+        }
+        body.sidebar-collapsed #sidebar {
+            width: 6rem;
+        }
+        body.sidebar-collapsed.sidebar-peek #sidebar {
+            width: 18rem;
+        }
+        body.sidebar-collapsed #main-content {
+            margin-left: 6rem;
+        }
+        body.sidebar-collapsed.sidebar-peek #main-content {
+            margin-left: 18rem;
+        }
+        .sidebar-brand-copy,
+        .sidebar-profile-copy,
+        .sidebar-link-label,
+        .sidebar-footer-copy,
+        .sidebar-desktop-label {
+            opacity: 1;
+            max-width: 14rem;
+            transform: translateX(0);
+            transition: opacity .22s ease, transform .22s ease, max-width .22s ease;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        body.sidebar-text-hidden .sidebar-brand-copy,
+        body.sidebar-text-hidden .sidebar-profile-copy,
+        body.sidebar-text-hidden .sidebar-link-label,
+        body.sidebar-text-hidden .sidebar-footer-copy,
+        body.sidebar-text-hidden .sidebar-desktop-label {
+            opacity: 0;
+            max-width: 0;
+            transform: translateX(-6px);
+        }
+        body.sidebar-collapsed .sidebar-brand-copy,
+        body.sidebar-collapsed .sidebar-profile-copy,
+        body.sidebar-collapsed .sidebar-link-label,
+        body.sidebar-collapsed .sidebar-footer-copy,
+        body.sidebar-collapsed .sidebar-desktop-label {
+            opacity: 0;
+            max-width: 0;
+            transform: translateX(-6px);
+        }
+        body.sidebar-collapsed.sidebar-peek .sidebar-brand-copy,
+        body.sidebar-collapsed.sidebar-peek .sidebar-profile-copy,
+        body.sidebar-collapsed.sidebar-peek .sidebar-link-label,
+        body.sidebar-collapsed.sidebar-peek .sidebar-footer-copy,
+        body.sidebar-collapsed.sidebar-peek .sidebar-desktop-label {
+            opacity: 1;
+            max-width: 14rem;
+            transform: translateX(0);
+            transition-delay: .18s;
+        }
+        body.sidebar-collapsed .sidebar-nav-link {
+            justify-content: center;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        body.sidebar-collapsed.sidebar-peek .sidebar-nav-link {
+            justify-content: flex-start;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        body.sidebar-collapsed .sidebar-nav-link .bi {
+            margin-right: 0;
+        }
+        body.sidebar-collapsed.sidebar-peek .sidebar-nav-link .bi {
+            margin-right: 0.75rem;
+        }
+        body.sidebar-collapsed .sidebar-link-badge {
+            position: absolute;
+            top: 0.35rem;
+            right: 0.35rem;
+        }
+        body.sidebar-collapsed .sidebar-profile-shell,
+        body.sidebar-collapsed .sidebar-brand-shell {
+            justify-content: center;
+        }
+        body.sidebar-collapsed .sidebar-footer-action {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        @media (max-width: 767.98px) {
+            body.sidebar-collapsed #main-content {
+                margin-left: 0;
+            }
+        }
+        @keyframes assistantGlow {
+            0%, 100% { box-shadow: 0 18px 45px rgba(15, 23, 42, 0.24); }
+            50% { box-shadow: 0 22px 55px rgba(14, 116, 144, 0.28); }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="min-h-screen">
+    {% if messages %}
+        {% for message in messages %}
+            <div data-toast-message="{{ message|escapejs }}" data-toast-type="{{ message.tags|default:'info' }}" class="hidden"></div>
+        {% endfor %}
+    {% endif %}
+
+    <div id="modal-container"></div>
+    <div id="sidebar-mobile-overlay" class="fixed inset-0 z-30 hidden bg-slate-950/30 md:hidden"></div>
+
+    <div class="flex min-h-screen">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-r border-slate-200/80 bg-white/90 shadow-soft transition-all duration-300 md:translate-x-0">
+            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-5">
+                <a href="{% url 'home' %}" class="sidebar-brand-shell flex items-center gap-3" data-skip-auto-icon="true">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-800 text-white shadow-soft">
+                        <span class="text-lg font-extrabold">F</span>
+                    </div>
+                    <div class="sidebar-brand-copy">
+                        <div class="text-lg font-extrabold tracking-tight gradient-text">FundiConnect</div>
+                        <div class="text-xs text-slate-500">Jobs, bids, chat, delivery</div>
+                    </div>
+                </a>
+                <div class="flex items-center gap-2">
+                    <button id="sidebar-collapse-button" class="hidden rounded-xl p-2 text-slate-500 hover:bg-slate-100 md:inline-flex" aria-label="Collapse sidebar">
+                        <i class="bi bi-layout-sidebar-inset"></i>
+                    </button>
+                    <button id="sidebar-close-button" class="rounded-xl p-2 text-slate-500 hover:bg-slate-100 md:hidden" aria-label="Close sidebar">
+                    <span class="text-lg">×</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="border-b border-slate-200 px-5 py-5">
+                {% if request.user.is_authenticated %}
+                    <div class="sidebar-profile-shell flex items-center gap-3">
+                        <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-slate-200 text-sm font-bold text-slate-700">
+                            {% if request.user.avatar %}
+                                <img src="{{ request.user.avatar.url }}" alt="{{ request.user.display_name }}" class="h-full w-full object-cover">
+                            {% else %}
+                                {{ request.user.display_name|first|upper }}
+                            {% endif %}
+                        </div>
+                        <div class="sidebar-profile-copy min-w-0">
+                            <div class="truncate font-semibold text-slate-900">{{ request.user.display_name }}</div>
+                            <div class="text-sm text-slate-500">@{{ request.user.username }}</div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="sidebar-footer-copy rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+                        Create an account to post jobs, manage bids, and chat in real time.
+                    </div>
+                {% endif %}
+            </div>
+
+            <nav class="flex-1 space-y-1 px-4 py-4 text-sm">
+                <a href="{% url 'home' %}" class="nav-link sidebar-nav-link relative flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900" data-path="{% url 'home' %}">
+                    <i class="bi bi-house-door text-base"></i>
+                    <span class="sidebar-link-label">Overview</span>
+                </a>
+                <a href="{% url 'job_list' %}" class="nav-link sidebar-nav-link relative flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900" data-path="{% url 'job_list' %}">
+                    <i class="bi bi-briefcase text-base"></i>
+                    <span class="sidebar-link-label">{% if request.user.is_authenticated and request.user.is_client %}My Jobs{% else %}Jobs{% endif %}</span>
+                </a>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'users:dashboard' %}" class="nav-link sidebar-nav-link relative flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900" data-path="{% url 'users:dashboard' %}">
+                        <i class="bi bi-speedometer2 text-base"></i>
+                        <span class="sidebar-link-label">Dashboard</span>
+                    </a>
+                    {% if request.user.is_client %}
+                        <a href="{% url 'post_job' %}" class="nav-link sidebar-nav-link relative flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900" data-path="{% url 'post_job' %}">
+                            <i class="bi bi-plus-circle text-base"></i>
+                            <span class="sidebar-link-label">Post a Job</span>
+                        </a>
+                        <a href="{% url 'users:artisans' %}" class="nav-link sidebar-nav-link relative flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900" data-path="{% url 'users:artisans' %}">
+                            <i class="bi bi-people text-base"></i>
+                            <span class="sidebar-link-label">Find Fundis</span>
+                        </a>
+                    {% endif %}
+                    {% if request.user.is_artisan %}
+                        <a href="{% url 'artisan_bids' %}" class="nav-link sidebar-nav-link relative flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900" data-path="{% url 'artisan_bids' %}">
+                            <i class="bi bi-journal-check text-base"></i>
+                            <span class="sidebar-link-label">My Bids</span>
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'users:notifications' %}" class="nav-link sidebar-nav-link relative flex items-center justify-between rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900" data-path="{% url 'users:notifications' %}">
+                        <span class="flex items-center gap-3">
+                            <i class="bi bi-chat-dots text-base"></i>
+                            <span class="sidebar-link-label">Messages</span>
+                        </span>
+                        {% if unread_message_count %}
+                            <span id="sidebar-attention-count" class="sidebar-link-badge rounded-full bg-slate-800 px-2 py-0.5 text-xs font-semibold text-white {% if not attention_count %}hidden{% endif %}">{{ attention_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'users:profile' %}" class="nav-link sidebar-nav-link relative flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900" data-path="{% url 'users:profile' %}">
+                        <i class="bi bi-person text-base"></i>
+                        <span class="sidebar-link-label">Profile</span>
+                    </a>
+                    <a href="{% url 'users:settings' %}" class="nav-link sidebar-nav-link relative flex items-center gap-3 rounded-2xl px-4 py-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900" data-path="{% url 'users:settings' %}">
+                        <i class="bi bi-gear text-base"></i>
+                        <span class="sidebar-link-label">Settings</span>
+                    </a>
+                {% endif %}
+            </nav>
+
+            <div class="border-t border-slate-200 px-4 py-4">
+                {% if request.user.is_authenticated %}
+                    <form method="post" action="{% url 'users:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="sidebar-footer-action w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">
+                            <i class="bi bi-box-arrow-right mr-2"></i>
+                            <span class="sidebar-link-label">Log out</span>
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="flex flex-col gap-2">
+                        <a href="{% url 'users:register' %}" class="sidebar-footer-action w-full rounded-2xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-slate-700">
+                            <i class="bi bi-person-plus mr-2"></i>
+                            <span class="sidebar-footer-copy">Sign up</span>
+                        </a>
+                        <a href="{% url 'users:login' %}" class="sidebar-footer-action w-full rounded-2xl border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                            <i class="bi bi-box-arrow-in-right mr-2"></i>
+                            <span class="sidebar-footer-copy">Log in</span>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </aside>
+
+        <div id="main-content" class="flex min-h-screen flex-1 flex-col md:ml-72">
+            <header class="sticky top-0 z-20 border-b border-white/50 glass">
+                <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center gap-3">
+                        <button id="sidebar-toggle-button" class="rounded-2xl border border-slate-200 bg-white p-3 text-slate-700 shadow-sm md:hidden" aria-label="Toggle sidebar">☰</button>
+                        <div>
+                            <div class="text-xs uppercase tracking-[0.24em] text-slate-500">Marketplace</div>
+                            <h1 class="text-lg font-bold text-slate-900">{% block page_title %}Modern artisan operations{% endblock %}</h1>
+                        </div>
+                    </div>
+                    <div class="hidden min-w-[280px] max-w-md flex-1 md:block">
+                            <div class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm animate-rise">
+                                Seamless flows, real-time chat, and cleaner delivery tracking.
+                            </div>
+                        </div>
+                    {% if request.user.is_authenticated %}
+                        <div class="flex items-center gap-3">
+                            <a href="{% url 'users:notifications' %}" class="relative rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+                                <i class="bi bi-inbox mr-2"></i>
+                                Inbox
+                                {% if attention_count %}
+                                    <span id="header-attention-count" class="ml-2 rounded-full bg-slate-800 px-2 py-0.5 text-xs text-white {% if not attention_count %}hidden{% endif %}">{{ attention_count }}</span>
+                                {% endif %}
+                            </a>
+                            <div class="hidden text-right sm:block">
+                                <div class="text-sm font-semibold text-slate-900">{{ request.user.display_name }}</div>
+                                <div class="text-xs text-slate-500">{{ request.user.get_user_type_display|default:"Member" }}</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </header>
+
+            <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+                <div class="animate-rise">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+
+            <footer class="border-t border-slate-200/80 bg-white/60 px-4 py-6 text-sm text-slate-500 sm:px-6 lg:px-8">
+                <div class="mx-auto flex max-w-7xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <p>FundiConnect keeps job discovery, bidding, and delivery in one live workspace.</p>
+                    <p>Light navy-grey theme with realtime collaboration built in.</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    {% include 'includes/assistant_widget.html' %}
+    <div id="toast-container" class="fixed right-4 top-4 z-50 flex w-full max-w-sm flex-col gap-3 pointer-events-none"></div>
+    <script src="{% static 'js/script.js' %}"></script>
+    <script src="{% static 'js/assistant_widget.js' %}"></script>
+    {% if request.user.is_authenticated %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const updateAttention = () => {
+                fetch('{% url "users:attention_summary" %}', {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                    .then((response) => response.json())
+                    .then((payload) => {
+                        ['header-attention-count', 'sidebar-attention-count'].forEach((id) => {
+                            const node = document.getElementById(id);
+                            if (!node) return;
+                            if (payload.attention_count > 0) {
+                                node.textContent = payload.attention_count;
+                                node.classList.remove('hidden');
+                            } else {
+                                node.classList.add('hidden');
+                            }
+                        });
+                    })
+                    .catch(() => {});
+            };
+            updateAttention();
+            setInterval(updateAttention, 20000);
+        });
+    </script>
+    {% endif %}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

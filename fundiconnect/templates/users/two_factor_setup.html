@@ -1,0 +1,47 @@
+{% extends 'auth_base.html' %}
+{% block title %}Set Up 2FA | FundiConnect{% endblock %}
+
+{% block auth_context_actions %}
+<a href="{% url 'users:settings' %}" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 hover:bg-white">
+    <i class="bi bi-arrow-left"></i>
+    Settings
+</a>
+{% endblock %}
+
+{% block auth_content %}
+<div>
+    <div class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-600"><i class="bi bi-shield-lock"></i>Two-factor auth</div>
+    <h1 class="mt-6 flex items-center gap-3 text-4xl font-extrabold text-slate-900"><i class="bi bi-qr-code-scan text-sky-700"></i>Set up stronger protection</h1>
+    <p class="mt-3 text-sm leading-6 text-slate-500">Scan the QR code with Google Authenticator, Authy, Microsoft Authenticator, or any TOTP app, then confirm with the latest 6-digit code.</p>
+
+    <div class="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+            <div class="overflow-hidden rounded-3xl bg-white p-6 text-center shadow-sm [&_svg]:mx-auto [&_svg]:h-auto [&_svg]:w-full [&_svg]:max-w-[18rem]">{{ qr_code|safe }}</div>
+            <div class="mt-4 rounded-2xl bg-white px-4 py-3 text-sm text-slate-600"><span class="font-semibold text-slate-900">Secret:</span> <span class="break-all">{{ secret }}</span></div>
+            <div class="mt-4 flex items-start gap-3 rounded-2xl bg-white px-4 py-3 text-sm text-slate-600">
+                <i class="bi bi-phone text-sky-600"></i>
+                <p>If your app asks for manual setup, use the secret above and issuer name <span class="font-semibold text-slate-900">FundiConnect</span>.</p>
+            </div>
+        </div>
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 class="text-xl font-bold text-slate-900">Confirm your authenticator</h2>
+            <p class="mt-2 text-sm text-slate-500">Enter the current code from your authenticator app to finish setup and generate backup codes.</p>
+            <form method="post" class="mt-6 space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Authenticator code</label>
+                    <input type="text" name="token" inputmode="numeric" maxlength="6" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500" placeholder="123456">
+                </div>
+                <button type="submit" class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700" data-loading-label="Confirming...">
+                    <i class="bi bi-shield-lock mr-2"></i>
+                    Activate two-factor authentication
+                </button>
+            </form>
+            <div class="mt-5 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                <div class="flex items-center gap-2 font-semibold text-slate-900"><i class="bi bi-stars text-amber-500"></i> Why this matters</div>
+                <p class="mt-2">This keeps your jobs, bids, inbox, and payout-related actions better protected even if your password is exposed.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

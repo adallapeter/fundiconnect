@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Bid Detail | FundiConnect{% endblock %}
+{% block page_title %}Bid detail{% endblock %}
+{% block content %}
+<section class="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <h2 class="text-3xl font-extrabold text-slate-900">{{ bid.job.title }}</h2>
+        <div class="mt-6 space-y-4 text-sm text-slate-600">
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">Your amount:</span> KES {{ bid.amount }}</div>
+            <div class="rounded-3xl bg-slate-50 p-4"><span class="font-semibold text-slate-900">Completion time:</span> {{ bid.get_completion_time_display }}</div>
+            <div class="rounded-3xl bg-slate-50 p-4">
+                <span class="font-semibold text-slate-900">Status:</span>
+                <span class="{{ bid.status_badge_class }}">{{ bid.get_status_display }}</span>
+            </div>
+            <div class="rounded-3xl bg-slate-50 p-4">{{ bid.message }}</div>
+        </div>
+        {% if bid.status == 'pending' %}
+            <div class="mt-6 flex gap-3">
+                <a href="{% url 'edit_bid' bid.id %}" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700">Edit bid</a>
+                <a href="{% url 'withdraw_bid' bid.id %}" class="rounded-2xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Withdraw</a>
+            </div>
+        {% endif %}
+        {% if bid.status == 'countered' and latest_negotiation %}
+            <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-5">
+                <h3 class="text-lg font-bold text-slate-900"><i class="bi bi-arrow-left-right mr-2 text-sky-700"></i>Counter proposal</h3>
+                <div class="mt-3 text-sm text-slate-600">{{ latest_negotiation.message }}</div>
+                <div class="mt-3 text-xs text-slate-500">
+                    {% if latest_negotiation.proposed_amount %}Amount: KES {{ latest_negotiation.proposed_amount }}{% endif %}
+                    {% if latest_negotiation.proposed_timeline %} • Timeline: {{ latest_negotiation.proposed_timeline }}{% endif %}
+                </div>
+                <form method="post" action="{% url 'respond_counter_bid' bid.id %}" class="mt-4 flex flex-wrap gap-3">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="accept" class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700" data-loading-label="Accepting..."><i class="bi bi-check2-circle mr-2"></i>Accept counter</button>
+                    <button type="submit" name="action" value="reject" class="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" data-loading-label="Declining..."><i class="bi bi-x-circle mr-2"></i>Decline</button>
+                </form>
+            </div>
+        {% endif %}
+        {% if negotiations %}
+            <div class="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <h3 class="text-lg font-bold text-slate-900"><i class="bi bi-chat-square-text mr-2 text-sky-700"></i>Negotiation history</h3>
+                <div class="mt-4 space-y-3">
+                    {% for item in negotiations %}
+                        <div class="rounded-2xl bg-white p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm font-semibold text-slate-900">{{ item.sender.display_name }}</div>
+                                <span class="{{ item.status_badge_class }}">{{ item.get_status_display }}</span>
+                            </div>
+                            <div class="mt-2 text-sm text-slate-600">{{ item.message }}</div>
+                            {% if item.proposed_amount or item.proposed_timeline %}
+                                <div class="mt-2 text-xs text-slate-500">
+                                    {% if item.proposed_amount %}Amount: KES {{ item.proposed_amount }}{% endif %}
+                                    {% if item.proposed_timeline %} • Timeline: {{ item.proposed_timeline }}{% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <h3 class="text-2xl font-bold text-slate-900">Other opportunities</h3>
+        <div class="mt-6 space-y-4">
+            {% for job in suggested_jobs %}
+                <a href="{% url 'job_detail' job.id %}" class="block rounded-3xl bg-slate-50 p-4 hover:bg-white">
+                    <div class="font-semibold text-slate-900">{{ job.title }}</div>
+                    <div class="mt-2 text-sm text-slate-500">{{ job.location }} • KES {{ job.budget }}</div>
+                </a>
+            {% empty %}
+                <div class="text-sm text-slate-500">No suggested jobs right now.</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

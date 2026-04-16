@@ -1,0 +1,33 @@
+{% for conversation in conversations %}
+    <a href="{% url 'users:conversation_detail' conversation.id %}" class="group flex items-center justify-between rounded-[1.75rem] border border-slate-200 bg-slate-50/80 p-5 transition duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-soft">
+        <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-slate-200 via-sky-100 to-rose-100 text-sm font-bold text-slate-700">
+                {% if conversation.other_user.avatar %}
+                    <img src="{{ conversation.other_user.avatar.url }}" alt="{{ conversation.other_user.display_name }}" class="h-full w-full object-cover">
+                {% else %}
+                    {{ conversation.other_user.display_name|first|upper }}
+                {% endif %}
+            </div>
+            <div>
+                <div class="font-semibold text-slate-900">{{ conversation.other_user.display_name }}</div>
+                <div class="mt-1 text-sm text-slate-500">
+                    {% if conversation.latest_message_item %}{{ conversation.latest_message_item.content|truncatechars:84 }}{% else %}No messages yet. Start coordinating the work here.{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="text-right">
+            {% if conversation.latest_message_item %}
+                <div class="text-xs text-slate-500">{{ conversation.latest_message_item.timestamp|date:"M d, H:i" }}</div>
+            {% endif %}
+            {% if conversation.unread_count %}
+                <div class="mt-2 inline-flex rounded-full bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white">{{ conversation.unread_count }}</div>
+            {% endif %}
+        </div>
+    </a>
+{% empty %}
+    <div class="rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-slate-500">
+        <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-sky-700 shadow-sm"><i class="bi bi-chat-dots text-2xl"></i></div>
+        <div class="mt-4 font-semibold text-slate-900">No conversations yet</div>
+        <div class="mt-2 text-sm text-slate-500">Accepted jobs and direct hires will open coordinated chat threads here.</div>
+    </div>
+{% endfor %}

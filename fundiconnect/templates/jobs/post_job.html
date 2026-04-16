@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Post Job | FundiConnect{% endblock %}
+{% block page_title %}Create a job{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl">
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <h2 class="text-3xl font-extrabold text-slate-900">Post a new job</h2>
+        <p class="mt-2 text-sm text-slate-500">Use a clearer brief so fundis can respond with better bids faster.</p>
+        <form method="post" class="mt-8 space-y-6" data-assistant-endpoint="{% url 'users:assistant_respond' %}" data-assistant-context='{"page":"post_job"}'>
+            {% csrf_token %}
+            {% for field in form %}
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                    {% render_field field class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-500" %}
+                    {% if field.help_text %}<p class="mt-2 text-xs text-slate-500">{{ field.help_text }}</p>{% endif %}
+                    {% for error in field.errors %}<p class="mt-2 text-sm text-rose-600">{{ error }}</p>{% endfor %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700">Publish job</button>
+        </form>
+        <div class="mt-4" id="ai-suggestion-slot-post-job"></div>
+    </div>
+</section>
+{% endblock %}

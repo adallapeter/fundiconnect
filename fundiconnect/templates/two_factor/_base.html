@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FundiConnect{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Manrope', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(71, 85, 105, 0.16), transparent 28%),
+                linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+            color: #0f172a;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="min-h-screen">
+    <main class="mx-auto flex min-h-screen w-full max-w-3xl items-center px-4 py-10 sm:px-6">
+        <div class="w-full rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-[0_30px_80px_rgba(15,23,42,0.12)] sm:p-10">
+            <a href="{% url 'home' %}" class="mb-8 inline-flex items-center gap-3">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-lg font-extrabold text-white">F</div>
+                <div>
+                    <div class="text-lg font-extrabold text-slate-900">FundiConnect</div>
+                    <div class="text-xs uppercase tracking-[0.24em] text-slate-500">Security</div>
+                </div>
+            </a>
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

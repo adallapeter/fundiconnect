@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Inbox | FundiConnect{% endblock %}
+{% block page_title %}Conversation inbox{% endblock %}
+
+{% block content %}
+<section class="grid gap-8 xl:grid-cols-[1.15fr_0.85fr]">
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">Messages</h2>
+                <p class="mt-2 text-sm text-slate-500">Recent job and hire conversations, refreshed in place so your inbox stays current.</p>
+            </div>
+            <div class="rounded-full bg-gradient-to-r from-sky-100 via-white to-rose-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-600">Live inbox</div>
+        </div>
+        <form id="conversation-search" class="mt-6 flex flex-wrap gap-3" data-assistant-endpoint="{% url 'users:assistant_respond' %}" data-assistant-context='{"page":"messages_search"}'>
+            <div class="flex-1">
+                <input type="search" name="q" value="{{ search_query }}" placeholder="Search messages, names, or job titles" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-slate-500">
+            </div>
+            <button type="submit" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700" data-loading-label="Searching..."><i class="bi bi-search mr-2"></i>Search</button>
+        </form>
+        <div class="mt-3" id="ai-suggestion-slot-messages"></div>
+        <div id="conversation-feed" class="mt-6 space-y-4">
+            {% include 'partials/conversation_cards.html' with conversations=conversations %}
+        </div>
+    </div>
+    <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-shell">
+        <h2 class="text-2xl font-bold text-slate-900">Attention center</h2>
+        <p class="mt-2 text-sm text-slate-500">Recent platform alerts that may need a response.</p>
+        <div class="mt-6 space-y-4">
+            {% for notification in notifications %}
+                <a href="{{ notification.action_url|default:'#' }}" class="block rounded-3xl border border-slate-200 bg-slate-50 p-5 hover:bg-white">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="font-semibold text-slate-900">{{ notification.title }}</div>
+                            <div class="mt-2 text-sm text-slate-600">{{ notification.body }}</div>
+                        </div>
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold uppercase {% if notification.level == 'urgent' %}bg-rose-100 text-rose-700{% elif notification.level == 'success' %}bg-emerald-100 text-emerald-700{% elif notification.level == 'warning' %}bg-amber-100 text-amber-700{% else %}bg-sky-100 text-sky-700{% endif %}">{{ notification.level }}</span>
+                    </div>
+                    <div class="mt-3 text-xs text-slate-500">{{ notification.created_at|timesince }} ago</div>
+                </a>
+            {% empty %}
+                <div class="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500">
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-sky-700 shadow-sm"><i class="bi bi-bell-slash text-2xl"></i></div>
+                    <div class="mt-4 font-semibold text-slate-900">No alerts right now</div>
+                    <div class="mt-2 text-sm text-slate-500">New attention items will show up here as soon as they need you.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const feed = document.getElementById('conversation-feed');
+    const searchForm = document.getElementById('conversation-search');
+    const searchInput = searchForm?.querySelector('input[name="q"]');
+    if (!feed) return;
+
+    const refreshFeed = () => {
+        const query = searchInput?.value ? `?q=${encodeURIComponent(searchInput.value)}` : '';
+        fetch(`{% url "users:notifications" %}${query}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then((response) => response.json())
+        .then((payload) => {
+            if (payload.html) {
+                feed.innerHTML = payload.html;
+            }
+        })
+        .catch(() => {});
+    };
+
+    setInterval(refreshFeed, 15000);
+
+    searchForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        refreshFeed();
+    });
+});
+</script>
+{% endblock %}
